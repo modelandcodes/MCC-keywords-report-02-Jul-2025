@@ -3,93 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCC Keyword Ranking Dashboard</title>
+    <title>MCC Keywords Ranking Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        /* Custom styles for the responsive table */
+        @media (max-width: 768px) {
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tr {
+                display: block;
+                margin-bottom: 1rem;
+                border-radius: 0.75rem;
+                border: 1px solid #e5e7eb;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                background-color: #fff;
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 1rem;
+                text-align: right;
+                border-bottom: 1px solid #f3f4f6;
+            }
+            .responsive-table td:last-child {
+                border-bottom: 0;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-align: left;
+                margin-right: 1rem;
+                color: #4b5563;
+            }
         }
         .table-header-sortable {
             cursor: pointer;
             position: relative;
         }
         .table-header-sortable::after {
-            content: ' \2195'; /* Up-down arrow */
+            content: ' \2195';
             opacity: 0.4;
             position: absolute;
             right: 0.5rem;
         }
-        .table-header-sortable.asc::after {
-            content: ' \2191'; /* Up arrow */
-            opacity: 1;
-        }
-        .table-header-sortable.desc::after {
-            content: ' \2193'; /* Down arrow */
-            opacity: 1;
-        }
+        .table-header-sortable.asc::after { content: ' \2191'; opacity: 1; }
+        .table-header-sortable.desc::after { content: ' \2193'; opacity: 1; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <!-- Header Section -->
-        <header class="mb-8">
-            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Keyword Performance Dashboard</h1>
-            <p class="text-lg text-gray-600 mt-2">An overview of your MCC's search engine rankings local as of July 2, 2025.</p>
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">MCC Keywords Performance Dashboard</h1>
+            <p class="text-lg text-gray-600 mt-2">Fully overview of MCC search engine rankings.</p>
         </header>
 
-        <!-- All Keywords Visualization -->
-        <section class="mb-12 bg-white p-6 rounded-xl shadow-lg">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">All Keyword Rankings Visualization</h2>
-            <p class="text-gray-600 mb-4 text-sm">Displaying all keywords from report, sorted by best rank. You can scroll within the chart area below to see all entries.</p>
-            <div class="relative w-full" style="height: 80vh;">
-                 <div class="absolute top-0 left-0 right-0 bottom-0 overflow-y-auto pr-4">
-                    <canvas id="rankingChart"></canvas>
-                </div>
+        <!-- Keywords Visualization -->
+        <section class="mb-12 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                 <h2 id="chartTitle" class="text-2xl font-bold text-gray-800">Top 20 Keyword Rankings</h2>
+                 <button id="toggleChartData" class="mt-2 sm:mt-0 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                    Show All Keywords
+                </button>
+            </div>
+            <div class="relative w-full h-96 sm:h-[500px]">
+                <canvas id="rankingChart"></canvas>
             </div>
         </section>
 
         <!-- Full Keyword Ranking Table -->
-        <section class="bg-white p-6 rounded-xl shadow-lg">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">All Keyword Rankings</h2>
-            
-            <!-- Search/Filter Input -->
+        <section class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">All Keyword Details</h2>
             <div class="mb-4">
-                <input type="text" id="searchInput" placeholder="Search for a keyword..." class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                <input type="text" id="searchInput" placeholder="Search for a keyword..." class="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
             </div>
-
-            <!-- Table Container for scrolling on small screens -->
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-100">
+                <table class="min-w-full responsive-table">
+                    <thead>
                         <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider table-header-sortable" onclick="sortTable(0, 'string')">
-                                Keyword
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider table-header-sortable asc" onclick="sortTable(1, 'number')">
-                                Position
-                            </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider table-header-sortable" onclick="sortTable(2, 'string')">
-                                Landing Page
-                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider table-header-sortable" onclick="sortTable(0, 'string')">Keyword</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider table-header-sortable asc" onclick="sortTable(1, 'number')">Position</th>
+                            <th class="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider table-header-sortable" onclick="sortTable(2, 'string')">Landing Page</th>
                         </tr>
                     </thead>
-                    <tbody id="keywordTableBody" class="bg-white divide-y divide-gray-200">
-                        <!-- Table rows will be inserted here by JavaScript -->
+                    <tbody id="keywordTableBody" class="bg-white">
+                        <!-- JS will populate this -->
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- Footer -->
         <footer class="text-center mt-12 py-6 border-t border-gray-200">
-            <p class="text-sm text-gray-500">Dashboard generated by umal</p>
+            <p class="text-sm text-gray-500">Dashboard Created by MCC</p>
         </footer>
     </div>
 
     <script>
+        // --- Full Data Pasted Here ---
         const rawData = `Keyword;*.melbournecentralconveyancing.com.au/*_20250701;*.melbournecentralconveyancing.com.au/*_20250701_visibility;*.melbournecentralconveyancing.com.au/*_20250701_type;*.melbournecentralconveyancing.com.au/*_20250701_landing;*.melbournecentralconveyancing.com.au/*_difference;*.melbournecentralconveyancing.com.au/*_visibility_difference;Tags;Intents;CPC;Search Volume;Keyword Difficulty
 conveyancing fees melbourne;1;0.3861;ai overview;https://www.melbournecentralconveyancing.com.au/cheap-conveyancing-in-melbourne/;0;0;;"i";3.81;170;6
 cooling off period victoria;1;0.3861;ai overview;https://www.melbournecentralconveyancing.com.au/understanding-the-cooling-off-period-in-victoria-your-guide-to-property-purchases/;0;0;;"i";; ;6
@@ -140,168 +159,172 @@ conveyancing services melbourne;12;0.0348;organic;https://melbournecentralconvey
 real estate cooling off period;13;0.0322;organic;https://www.melbournecentralconveyancing.com.au/understanding-the-cooling-off-period-in-victoria-your-guide-to-property-purchases/;0;0;;"i";; ;11
 cooling off period contract;13;0.0322;organic;https://www.melbournecentralconveyancing.com.au/understanding-the-cooling-off-period-in-victoria-your-guide-to-property-purchases/;0;0;;"i";; ;11
 cooling off period for vendors victoria;13;0.0322;organic;https://www.melbournecentralconveyancing.com.au/can-a-seller-pull-out-of-a-contract-of-sale-in-victoria/;0;0;;"i";; ;10
+can vendor cancel contract of sale victoria;14;0.0299;organic;https://www.melbournecentralconveyancing.com.au/can-a-seller-pull-out-of-a-contract-of-sale-in-victoria/;0;0;;"i";; ;10
+section 32 sale of land act;14;0.0299;organic;https://www.melbournecentralconveyancing.com.au/what-is-a-section-32-vendor-statement-in-victoria/;0;0;;"i";; ;10
+s32 sale of land act;14;0.0299;organic;https://www.melbournecentralconveyancing.com.au/what-is-a-section-32-vendor-statement-in-victoria/;0;0;;"i";; ;10
+conveyancer melbourne;14;0.0299;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+cheapest conveyancing melbourne;15;0.0278;organic;https://www.melbournecentralconveyancing.com.au/cheap-conveyancing-in-melbourne/;0;0;;"i";; ;10
+melbourne conveyancer;15;0.0278;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+how long is the cooling off period;16;0.0259;organic;https://www.melbournecentralconveyancing.com.au/understanding-the-cooling-off-period-in-victoria-your-guide-to-property-purchases/;0;0;;"i";; ;11
+how long is cooling off period;16;0.0259;organic;https://www.melbournecentralconveyancing.com.au/understanding-the-cooling-off-period-in-victoria-your-guide-to-property-purchases/;0;0;;"i";; ;11
+conveyancing victoria melbourne;16;0.0259;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+conveyancing melbourne vic;17;0.0242;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+melbourne property conveyancing;17;0.0242;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+section 32 property;18;0.0227;organic;https://www.melbournecentralconveyancing.com.au/3-what-is-in-a-section-32-key-elements-explained/;0;0;;"i";;20;15
+vendor statement victoria;18;0.0227;organic;https://www.melbournecentralconveyancing.com.au/what-is-a-section-32-vendor-statement-in-victoria/;0;0;;"i";; ;10
+title exchange conveyancing;18;0.0227;organic;https://www.melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+conveyancer in melbourne;18;0.0227;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+cheap conveyancing melbourne;19;0.0213;organic;https://www.melbournecentralconveyancing.com.au/cheap-conveyancing-in-melbourne/;0;0;;"i";; ;10
+good conveyancer melbourne;19;0.0213;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+melbourne real estate conveyancing;19;0.0213;organic;https://melbournecentralconveyancing.com.au/;0;0;;"i";; ;10
+conveyancing dandenong victoria;20;0.02;organic;https://www.melbournecentralconveyancing.com.au/conveyancing-dandenong/;0;0;;"i";; ;10
 `;
+
+        // --- Global State ---
+        let keywordData = [];
+        let rankingChart;
+        let currentSort = { column: 1, order: 'asc' };
+        let isShowingAll = false;
 
         // --- Data Processing ---
         function parseData(rawData) {
             const rows = rawData.trim().split('\n');
             const header = rows.shift().split(';');
-            
-            // Find the correct indices for the columns we need
             const keywordIndex = header.indexOf('Keyword');
-            const positionIndex = 1; // It's always the second column
-            const landingPageIndex = 4; // It's always the fifth column
+            const positionIndex = 1;
+            const landingPageIndex = 4;
 
             return rows.map(row => {
                 const columns = row.split(';');
-                if (columns.length < 5) return null; // Skip malformed rows
+                if (columns.length < 5) return null;
                 const position = parseInt(columns[positionIndex], 10);
-                
-                if (isNaN(position) || position < 1) {
-                    return null;
-                }
+                if (isNaN(position) || position < 1) return null;
                 return {
                     keyword: columns[keywordIndex] || 'N/A',
                     position: position,
                     landingPage: columns[landingPageIndex] || 'N/A'
                 };
-            }).filter(item => item !== null); // Filter out invalid entries
+            }).filter(item => item !== null);
         }
 
-        const keywordData = parseData(rawData);
-
-        // --- Chart.js Visualization ---
-        // Use all keywords for the chart, sorted by position
-        const allKeywordsForChart = [...keywordData].sort((a, b) => a.position - b.position);
-
-        const ctx = document.getElementById('rankingChart').getContext('2d');
-        const rankingChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: allKeywordsForChart.map(d => d.keyword),
+        // --- Chart Logic ---
+        function createOrUpdateChart(data) {
+            const ctx = document.getElementById('rankingChart').getContext('2d');
+            const chartData = {
+                labels: data.map(d => d.keyword),
                 datasets: [{
-                    label: 'Google Rank (Position)',
-                    data: allKeywordsForChart.map(d => d.position),
-                    backgroundColor: allKeywordsForChart.map(d => {
-                        if (d.position <= 3) return 'rgba(75, 192, 192, 0.8)'; // Green
-                        if (d.position <= 10) return 'rgba(255, 159, 64, 0.8)'; // Orange
-                        return 'rgba(255, 99, 132, 0.8)'; // Red
+                    label: 'Google Rank',
+                    data: data.map(d => d.position),
+                    backgroundColor: data.map(d => {
+                        if (d.position <= 3) return 'rgba(52, 211, 153, 0.8)';
+                        if (d.position <= 10) return 'rgba(251, 146, 60, 0.8)';
+                        return 'rgba(248, 113, 113, 0.8)';
                     }),
-                    borderColor: allKeywordsForChart.map(d => {
-                        if (d.position <= 3) return 'rgba(75, 192, 192, 1)';
-                        if (d.position <= 10) return 'rgba(255, 159, 64, 1)';
-                        return 'rgba(255, 99, 132, 1)';
+                    borderColor: data.map(d => {
+                        if (d.position <= 3) return 'rgba(16, 185, 129, 1)';
+                        if (d.position <= 10) return 'rgba(249, 115, 22, 1)';
+                        return 'rgba(239, 68, 68, 1)';
                     }),
                     borderWidth: 1,
                     barThickness: 12,
                 }]
-            },
-            options: {
+            };
+
+            const chartOptions = {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    x: {
-                        beginAtZero: true,
-                        reverse: true,
-                        ticks: {
-                            stepSize: 1
-                        },
-                        grid: {
-                            display: true,
-                            color: 'rgba(200, 200, 200, 0.1)'
-                        }
-                    },
-                    y: {
-                         ticks: {
-                            font: {
-                                size: 10
-                            }
-                         },
-                         grid: {
-                            display: false
-                        }
-                    }
+                    x: { beginAtZero: true, reverse: true, ticks: { stepSize: 1 } },
+                    y: { ticks: { font: { size: 10 } } }
                 },
                 plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `Position: ${context.raw}`;
-                            }
-                        }
-                    }
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: (c) => `Position: ${c.raw}` } }
                 }
+            };
+            
+            if (rankingChart) {
+                rankingChart.data = chartData;
+                rankingChart.options = chartOptions;
+                rankingChart.update();
+            } else {
+                rankingChart = new Chart(ctx, { type: 'bar', data: chartData, options: chartOptions });
             }
-        });
+        }
 
-        // --- Table Population and Functionality ---
-        const tableBody = document.getElementById('keywordTableBody');
-        let currentSort = { column: 1, order: 'asc' }; // Initial sort by position
-
+        // --- Table Logic ---
         function renderTable(data) {
+            const tableBody = document.getElementById('keywordTableBody');
             tableBody.innerHTML = '';
             data.forEach(item => {
                 const row = document.createElement('tr');
-                row.className = "hover:bg-gray-50 transition-colors";
                 row.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-medium text-gray-900">${item.keyword}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
+                    <td data-label="Keyword" class="px-6 py-4 whitespace-normal text-sm font-medium text-gray-900">${item.keyword}</td>
+                    <td data-label="Position" class="px-6 py-4 whitespace-nowrap">
                         <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${item.position <= 3 ? 'bg-green-100 text-green-800' : item.position <= 10 ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}">
                             ${item.position}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate" title="${item.landingPage}">
-                        <a href="${item.landingPage}" target="_blank" class="hover:text-blue-600">${item.landingPage}</a>
+                    <td data-label="Landing Page" class="px-6 py-4 whitespace-normal text-sm text-gray-500">
+                        <a href="${item.landingPage}" target="_blank" class="hover:text-blue-600 break-all">${item.landingPage}</a>
                     </td>
                 `;
                 tableBody.appendChild(row);
             });
         }
-        
-        // Sorting function
+
         function sortTable(columnIndex, type) {
             const headers = document.querySelectorAll('.table-header-sortable');
             const order = (currentSort.column === columnIndex && currentSort.order === 'asc') ? 'desc' : 'asc';
+            const dataToSort = keywordData.filter(item => document.getElementById('searchInput').value ? item.keyword.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase()) : true);
 
-            const sortedData = [...keywordData].sort((a, b) => {
-                let valA, valB;
-                if (columnIndex === 0) { valA = a.keyword; valB = b.keyword; }
-                if (columnIndex === 1) { valA = a.position; valB = b.position; }
-                if (columnIndex === 2) { valA = a.landingPage; valB = b.landingPage; }
-
-                if (type === 'number') {
-                    return order === 'asc' ? valA - valB : valB - valA;
-                } else {
-                    return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                }
+            dataToSort.sort((a, b) => {
+                const valA = columnIndex === 0 ? a.keyword : columnIndex === 1 ? a.position : a.landingPage;
+                const valB = columnIndex === 0 ? b.keyword : columnIndex === 1 ? b.position : b.landingPage;
+                if (type === 'number') return order === 'asc' ? valA - valB : valB - valA;
+                return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             });
             
             headers.forEach(h => h.classList.remove('asc', 'desc'));
             headers[columnIndex].classList.add(order);
-
             currentSort = { column: columnIndex, order: order };
-            renderTable(sortedData);
+            renderTable(dataToSort);
         }
 
-        // Search/filter function
-        document.getElementById('searchInput').addEventListener('keyup', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const filteredData = keywordData.filter(item => {
-                return item.keyword.toLowerCase().includes(searchTerm);
+        // --- Event Listeners and Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            keywordData = parseData(rawData).sort((a, b) => a.position - b.position);
+
+            const top20 = keywordData.slice(0, 20);
+            createOrUpdateChart(top20);
+            renderTable(keywordData); // Render full table initially
+
+            document.getElementById('toggleChartData').addEventListener('click', () => {
+                const button = document.getElementById('toggleChartData');
+                const chartTitle = document.getElementById('chartTitle');
+                isShowingAll = !isShowingAll;
+                if (isShowingAll) {
+                    createOrUpdateChart(keywordData);
+                    button.textContent = 'Show Top 20';
+                    chartTitle.textContent = 'All Keyword Rankings';
+                    // Make chart container taller for all keywords
+                    document.getElementById('rankingChart').parentElement.style.height = '200vh';
+                } else {
+                    createOrUpdateChart(top20);
+                    button.textContent = 'Show All Keywords';
+                    chartTitle.textContent = 'Top 20 Keyword Rankings';
+                    // Reset chart container height
+                    document.getElementById('rankingChart').parentElement.style.height = '96';
+                }
             });
-            renderTable(filteredData);
+
+            document.getElementById('searchInput').addEventListener('keyup', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const filteredData = keywordData.filter(item => item.keyword.toLowerCase().includes(searchTerm));
+                renderTable(filteredData);
+            });
         });
-
-        // Initial render
-        sortTable(1, 'number'); // Sort by position ascending initially
-
     </script>
 </body>
 </html>
-
